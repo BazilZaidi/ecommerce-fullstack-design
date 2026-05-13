@@ -1,11 +1,28 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import ProductCard from '../components/ProductCard';
-import products from '../data/products';
+import { fetchProducts } from '../api/api';
 
 function HomePage() {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const getProducts = async () => {
+      try {
+        const res = await fetchProducts();
+        setProducts(res.data);
+      } catch (error) {
+        console.error('Error fetching products:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    getProducts();
+  }, []);
+
   return (
     <div>
-
       {/* Hero Section */}
       <section className="bg-gradient-to-r from-blue-600 to-blue-400 text-white">
         <div className="max-w-7xl mx-auto px-4 py-16 flex flex-col md:flex-row items-center gap-8">
@@ -32,20 +49,6 @@ function HomePage() {
         </div>
       </section>
 
-      {/* Categories Bar */}
-      <section className="bg-gray-50 py-6">
-        <div className="max-w-7xl mx-auto px-4 flex flex-wrap gap-3 justify-center">
-          {['All', 'Electronics', 'Sports', 'Accessories', 'Kitchen'].map(cat => (
-            <button
-              key={cat}
-              className="px-4 py-2 rounded-full border border-gray-300 text-sm hover:bg-blue-600 hover:text-white hover:border-blue-600 transition"
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
-      </section>
-
       {/* Featured Products */}
       <section className="max-w-7xl mx-auto px-4 py-10">
         <div className="flex items-center justify-between mb-6">
@@ -54,15 +57,24 @@ function HomePage() {
             View All →
           </Link>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {products.slice(0, 4).map(product => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
+
+        {loading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="bg-gray-200 animate-pulse rounded-xl h-64"></div>
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {products.slice(0, 4).map(product => (
+              <ProductCard key={product._id} product={product} />
+            ))}
+          </div>
+        )}
       </section>
 
       {/* Banner */}
-      <section className="max-w-7xl mx-auto px-4 py-6">
+      <section className="max-w-7xl mx-auto px-4 py-6 mb-10">
         <div className="bg-yellow-400 rounded-2xl p-8 flex flex-col md:flex-row items-center justify-between">
           <div>
             <h3 className="text-2xl font-bold text-gray-800">Special Offer!</h3>
@@ -75,7 +87,6 @@ function HomePage() {
           </Link>
         </div>
       </section>
-
     </div>
   );
 }

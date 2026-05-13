@@ -31,7 +31,7 @@ function ProductCard({ product }) {
         </div>
 
         {/* Button */}
-        <Link to={`/products/${product.id}`}>
+        <Link to={`/products/${product._id}`}>
           <button className="mt-3 w-full bg-blue-600 hover:bg-blue-700 text-white text-sm py-2 rounded-lg transition-colors">
             View Details
           </button>

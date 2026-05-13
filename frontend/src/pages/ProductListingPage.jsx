@@ -1,32 +1,53 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import ProductCard from '../components/ProductCard';
-import products from '../data/products';
+import { fetchProducts } from '../api/api';
 
 function ProductListingPage() {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [sortBy, setSortBy] = useState('default');
 
-  const categories = ['All', ...new Set(products.map(p => p.category))];
+  const categories = ['All', 'Electronics', 'Sports', 'Accessories', 'Kitchen', 'Home'];
 
-  // Filter products
-  let filtered = selectedCategory === 'All'
-    ? products
-    : products.filter(p => p.category === selectedCategory);
+  useEffect(() => {
+    const getProducts = async () => {
+      setLoading(true);
+      try {
+        const res = await fetchProducts(search, selectedCategory);
+        setProducts(res.data);
+      } catch (error) {
+        console.error('Error:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    getProducts();
+  }, [search, selectedCategory]);
 
-  // Sort products
-  if (sortBy === 'price-low') filtered = [...filtered].sort((a, b) => a.price - b.price);
-  if (sortBy === 'price-high') filtered = [...filtered].sort((a, b) => b.price - a.price);
-  if (sortBy === 'rating') filtered = [...filtered].sort((a, b) => b.rating - a.rating);
+  let sorted = [...products];
+  if (sortBy === 'price-low') sorted.sort((a, b) => a.price - b.price);
+  if (sortBy === 'price-high') sorted.sort((a, b) => b.price - a.price);
+  if (sortBy === 'rating') sorted.sort((a, b) => b.rating - a.rating);
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
-      
       <h1 className="text-3xl font-bold text-gray-800 mb-6">All Products</h1>
 
-      {/* Filters Bar */}
+      {/* Search Bar */}
+      <div className="mb-6">
+        <input
+          type="text"
+          placeholder="🔍 Search products by name or category..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+        />
+      </div>
+
+      {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-4 mb-8 items-start sm:items-center justify-between">
-        
-        {/* Category Filter */}
         <div className="flex flex-wrap gap-2">
           {categories.map(cat => (
             <button
@@ -42,8 +63,6 @@ function ProductListingPage() {
             </button>
           ))}
         </div>
-
-        {/* Sort */}
         <select
           value={sortBy}
           onChange={e => setSortBy(e.target.value)}
@@ -56,16 +75,26 @@ function ProductListingPage() {
         </select>
       </div>
 
-      {/* Results count */}
-      <p className="text-gray-500 text-sm mb-4">{filtered.length} products found</p>
+      <p className="text-gray-500 text-sm mb-4">{sorted.length} products found</p>
 
-      {/* Products Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {filtered.map(product => (
-          <ProductCard key={product.id} product={product} />
-        ))}
-      </div>
-
+      {loading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          {[...Array(8)].map((_, i) => (
+            <div key={i} className="bg-gray-200 animate-pulse rounded-xl h-64"></div>
+          ))}
+        </div>
+      ) : sorted.length === 0 ? (
+        <div className="text-center py-20 text-gray-500">
+          <p className="text-5xl mb-4">😕</p>
+          <p className="text-lg">No products found for "{search}"</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          {sorted.map(product => (
+            <ProductCard key={product._id} product={product} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
