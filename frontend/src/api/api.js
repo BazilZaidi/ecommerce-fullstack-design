@@ -34,3 +34,6 @@ export const updateProduct = (id, productData) =>
 
 export const deleteProduct = (id) =>
   API.delete(`/products/${id}`);
+
+export const createPaymentIntent = (amount) =>
+  API.post('/payment/create-payment-intent', { amount });
